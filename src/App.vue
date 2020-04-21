@@ -84,7 +84,7 @@ export default {
       data: [],
       tileLayer: null,
       heatType: 'POSITIF',
-      positiveHeatLayer: null,
+      heatLayer: null,
       pdpHeatLayer: null,
       odpHeatLayer: null,
       playIndex: -1,
@@ -158,6 +158,15 @@ export default {
         this.showHeat(format(this.dateRange[index], "yyyy-MM-dd"));
       }
     },
+    heatType() {
+      this.showHeat(format(this.dateRange[this.playIndex], "yyyy-MM-dd"));
+      if (this.heatLayer) {
+        this.heatLayer.setOptions({
+          gradient: this.getGradient(),
+          minOpacity: this.getMinOpacity()
+        })
+      }
+    }
   },
   async mounted() {
     this.initMap();
@@ -202,70 +211,34 @@ export default {
     },
     showHeat(date) {
       const data = this.getData(date);
-
-      // // ODP
-      // const odpHeatData = data.map(data => [
-      //   this.kelurahan[data.kelurahan][0], // lat
-      //   this.kelurahan[data.kelurahan][1], // lng
-      //   data.odp / this.highestOdp   // intensity
-      // ])
-      // if (this.odpHeatLayer) {
-      //   this.odpHeatLayer.remove()
-      // }
-      // this.odpHeatLayer = Leaflet.heatLayer(odpHeatData, {
-      //   radius: 45,
-      //   gradient: {
-      //     0.5: 'lightblue',
-      //     1: 'blue'
-      //   }
-      // }).addTo(this.map)
-
-      // // PDP
-      // const pdpHeatData = data.map(data => [
-      //   this.kelurahan[data.kelurahan][0], // lat
-      //   this.kelurahan[data.kelurahan][1], // lng
-      //   data.pdp / this.highestPdp   // intensity
-      // ])
-      // if (this.pdpHeatLayer) {
-      //   this.pdpHeatLayer.remove()
-      // }
-      // this.pdpHeatLayer = Leaflet.heatLayer(pdpHeatData, {
-      //   radius: 36,
-      //   gradient: {
-      //     0.5: 'yellow',
-      //     1: 'orange'
-      //   }
-      // }).addTo(this.map)
-
-      // POSITIVE
-      const positiveHeatData = data.map((data) => [
+      const heatData = data.map((data) => [
         this.kelurahan[data.kelurahan][0], // lat
         this.kelurahan[data.kelurahan][1], // lng
-        data.positif / this.highestPositive, // intensity
+        this.getIntensity(data), // intensity
       ]);
 
-      if (!this.positiveHeatLayer) {
-        this.positiveHeatLayer = Leaflet.heatLayer(positiveHeatData, {
+      if (!this.heatLayer) {
+        this.heatLayer = Leaflet.heatLayer(heatData, {
           radius: this.getRadius(),
           blur: this.getBlur(),
-          gradient: {
-            0.15: "blue",
-            0.3: "darkblue",
-            0.45: "lime",
-            0.6: "yellow",
-            0.75: "orange",
-            1: "red",
-          },
+          gradient: this.getGradient(),
         }).addTo(this.map);
 
         this.map.on("zoom", () => {
-          this.positiveHeatLayer.setOptions({
+          this.heatLayer.setOptions({
             radius: this.getRadius(),
             blur: this.getBlur(),
           });
         });
       } else {
-        this.positiveHeatLayer.setLatLngs(positiveHeatData);
+        this.heatLayer.setLatLngs(heatData);
+      }
+    },
+    getIntensity(data) {
+      switch (this.heatType) {
+        case 'POSITIF': return data.positif / this.highestPositive
+        case 'ODP': return data.odp / this.highestOdp
+        case 'PDP': return data.pdp / this.highestPdp
       }
     },
     getRadius() {
@@ -275,6 +248,35 @@ export default {
     getBlur() {
       const zoom = this.map.getZoom();
       return zoom < 11 ? 10 : ((zoom - 10) * 14) + 1;
+    },
+    getGradient() {
+      switch (this.heatType) {
+        case 'POSITIF': return {
+          0.15: "#00aad4",
+          0.3: "#0076ba",
+          0.45: "lime",
+          0.6: "yellow",
+          0.75: "orange",
+          1: "red",
+        }
+        case 'PDP': return {
+          0.3: "#666",
+          0.6: "#aba",
+          1: "#8fb",
+        }
+        case 'ODP': return {
+          0.3: "#666",
+          0.6: "#aab",
+          1: "#8cf",
+        }
+      }
+    },
+    getMinOpacity() {
+      switch (this.heatType) {
+        case 'POSITIF': return 0.1
+        case 'PDP': return 0.05
+        case 'ODP': return 0.05
+      }
     },
     async play() {
       if (this.playIndex == this.dateRange.length - 1) {
