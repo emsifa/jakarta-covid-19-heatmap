@@ -4,143 +4,244 @@
     <div class="top-bar" v-if="ready">
       <div class="flex justify-center">
         <div class="inline-flex">
-          <button @click="heatType = 'PDP'" class="font-bold py-2 px-4 rounded-l" :class="{
-            'bg-gray-300 hover:bg-gray-400 text-gray-800': heatType != 'PDP',
-            'bg-teal-500 hover:bg-teal-699 text-white': heatType == 'PDP',
-          }">
+          <button
+            @click="heatType = 'PDP'"
+            class="font-bold py-2 px-4 rounded-l"
+            :class="{
+              'bg-gray-300 hover:bg-gray-400 text-gray-800': heatType != 'PDP',
+              'bg-teal-500 hover:bg-teal-699 text-white': heatType == 'PDP',
+            }"
+          >
             PDP
           </button>
-          <button @click="heatType = 'POSITIF'" class="font-bold py-2 px-4" :class="{
-            'bg-gray-300 hover:bg-gray-400 text-gray-800': heatType != 'POSITIF',
-            'bg-teal-500 hover:bg-teal-699 text-white': heatType == 'POSITIF',
-          }">
+          <button
+            @click="heatType = 'POSITIF'"
+            class="font-bold py-2 px-4"
+            :class="{
+              'bg-gray-300 hover:bg-gray-400 text-gray-800':
+                heatType != 'POSITIF',
+              'bg-teal-500 hover:bg-teal-699 text-white': heatType == 'POSITIF',
+            }"
+          >
             POSITIF
           </button>
-          <button @click="heatType = 'ODP'" class="font-bold py-2 px-4 rounded-r" :class="{
-            'bg-gray-300 hover:bg-gray-400 text-gray-800': heatType != 'ODP',
-            'bg-teal-500 hover:bg-teal-699 text-white': heatType == 'ODP',
-          }">
+          <button
+            @click="heatType = 'ODP'"
+            class="font-bold py-2 px-4 rounded-r"
+            :class="{
+              'bg-gray-300 hover:bg-gray-400 text-gray-800': heatType != 'ODP',
+              'bg-teal-500 hover:bg-teal-699 text-white': heatType == 'ODP',
+            }"
+          >
             ODP
           </button>
         </div>
       </div>
       <h1 class="text-4xl text-white mt-3">{{ playDate }}</h1>
-      <h4 v-if="summary && !showDetailSummary" @click="showDetailSummary = true" class="mt-0 text-lg cursor-pointer">
-        <span v-if="heatType == 'POSITIF'" :class="{
-          'text-red-500': summary.active > prevSummary.active,
-          'text-green-500': summary.active < prevSummary.active,
-          'text-gray-500': summary.active == prevSummary.active
-        }">
-          <i v-if="summary.active > prevSummary.active" class="icon-arrow-up"></i>
-          <i v-if="summary.active < prevSummary.active" class="icon-arrow-down"></i>
+      <h4
+        v-if="summary && !showDetailSummary"
+        @click="showDetailSummary = true"
+        class="mt-0 text-lg cursor-pointer"
+      >
+        <span
+          v-if="heatType == 'POSITIF'"
+          :class="{
+            'text-red-500': summary.active > prevSummary.active,
+            'text-green-500': summary.active < prevSummary.active,
+            'text-gray-500': summary.active == prevSummary.active,
+          }"
+        >
+          <i
+            v-if="summary.active > prevSummary.active"
+            class="icon-arrow-up"
+          ></i>
+          <i
+            v-if="summary.active < prevSummary.active"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.active }} kasus aktif
         </span>
 
-        <span v-if="heatType == 'ODP'" :class="{
-          'text-red-500': summary.odppp > prevSummary.odppp,
-          'text-green-500': summary.odppp < prevSummary.odppp,
-          'text-gray-500': summary.odppp == prevSummary.odppp
-        }">
+        <span
+          v-if="heatType == 'ODP'"
+          :class="{
+            'text-red-500': summary.odppp > prevSummary.odppp,
+            'text-green-500': summary.odppp < prevSummary.odppp,
+            'text-gray-500': summary.odppp == prevSummary.odppp,
+          }"
+        >
           <i v-if="summary.odppp > prevSummary.odppp" class="icon-arrow-up"></i>
-          <i v-if="summary.odppp < prevSummary.odppp" class="icon-arrow-down"></i>
+          <i
+            v-if="summary.odppp < prevSummary.odppp"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.odppp }} DIPANTAU
         </span>
 
-        <span v-if="heatType == 'PDP'" :class="{
-          'text-red-500': summary.pdpmd > prevSummary.pdpmd,
-          'text-green-500': summary.pdpmd < prevSummary.pdpmd,
-          'text-gray-500': summary.pdpmd == prevSummary.pdpmd
-        }">
+        <span
+          v-if="heatType == 'PDP'"
+          :class="{
+            'text-red-500': summary.pdpmd > prevSummary.pdpmd,
+            'text-green-500': summary.pdpmd < prevSummary.pdpmd,
+            'text-gray-500': summary.pdpmd == prevSummary.pdpmd,
+          }"
+        >
           <i v-if="summary.pdpmd > prevSummary.pdpmd" class="icon-arrow-up"></i>
-          <i v-if="summary.pdpmd < prevSummary.pdpmd" class="icon-arrow-down"></i>
+          <i
+            v-if="summary.pdpmd < prevSummary.pdpmd"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.pdpmd }} DIRAWAT
         </span>
       </h4>
-      <h4 v-if="summary && showDetailSummary && heatType == 'POSITIF'" @click="showDetailSummary = false" class="mt-0 cursor-pointer" style="font-size:.6rem">
-        <span :class="{
-          'text-red-500': summary.positif > prevSummary.positif,
-          'text-green-500': summary.positif < prevSummary.positif,
-          'text-gray-500': summary.positif == prevSummary.positif
-        }">
-          <i v-if="summary.positif > prevSummary.positif" class="icon-arrow-up"></i>
-          <i v-if="summary.positif < prevSummary.positif" class="icon-arrow-down"></i>
+      <h4
+        v-if="summary && showDetailSummary && heatType == 'POSITIF'"
+        @click="showDetailSummary = false"
+        class="mt-0 cursor-pointer"
+        style="font-size:.6rem"
+      >
+        <span
+          :class="{
+            'text-red-500': summary.positif > prevSummary.positif,
+            'text-green-500': summary.positif < prevSummary.positif,
+            'text-gray-500': summary.positif == prevSummary.positif,
+          }"
+        >
+          <i
+            v-if="summary.positif > prevSummary.positif"
+            class="icon-arrow-up"
+          ></i>
+          <i
+            v-if="summary.positif < prevSummary.positif"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.positif }} total
         </span>
         <span class="text-gray-500 mx-2">/</span>
-        <span :class="{
-          'text-red-500': summary.meninggal > prevSummary.meninggal,
-          'text-green-500': summary.meninggal < prevSummary.meninggal,
-          'text-gray-500': summary.meninggal == prevSummary.meninggal
-        }">
-          <i v-if="summary.meninggal > prevSummary.meninggal" class="icon-arrow-up"></i>
-          <i v-if="summary.meninggal < prevSummary.meninggal" class="icon-arrow-down"></i>
+        <span
+          :class="{
+            'text-red-500': summary.meninggal > prevSummary.meninggal,
+            'text-green-500': summary.meninggal < prevSummary.meninggal,
+            'text-gray-500': summary.meninggal == prevSummary.meninggal,
+          }"
+        >
+          <i
+            v-if="summary.meninggal > prevSummary.meninggal"
+            class="icon-arrow-up"
+          ></i>
+          <i
+            v-if="summary.meninggal < prevSummary.meninggal"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.meninggal }} meninggal
         </span>
         <span class="text-gray-500 mx-2">/</span>
-        <span :class="{
-          'text-green-500': summary.sembuh > prevSummary.sembuh,
-          'text-red-500': summary.sembuh < prevSummary.sembuh,
-          'text-gray-500': summary.sembuh == prevSummary.sembuh
-        }">
-          <i v-if="summary.sembuh > prevSummary.sembuh" class="icon-arrow-up"></i>
-          <i v-if="summary.sembuh < prevSummary.sembuh" class="icon-arrow-down"></i>
+        <span
+          :class="{
+            'text-green-500': summary.sembuh > prevSummary.sembuh,
+            'text-red-500': summary.sembuh < prevSummary.sembuh,
+            'text-gray-500': summary.sembuh == prevSummary.sembuh,
+          }"
+        >
+          <i
+            v-if="summary.sembuh > prevSummary.sembuh"
+            class="icon-arrow-up"
+          ></i>
+          <i
+            v-if="summary.sembuh < prevSummary.sembuh"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.sembuh }} sembuh
         </span>
       </h4>
 
-      <h4 v-if="summary && showDetailSummary && heatType == 'PDP'" @click="showDetailSummary = false" class="mt-0 cursor-pointer" style="font-size:.6rem">
-        <span :class="{
-          'text-red-500': summary.pdp > prevSummary.pdp,
-          'text-green-500': summary.pdp < prevSummary.pdp,
-          'text-gray-500': summary.pdp == prevSummary.pdp
-        }">
+      <h4
+        v-if="summary && showDetailSummary && heatType == 'PDP'"
+        @click="showDetailSummary = false"
+        class="mt-0 cursor-pointer"
+        style="font-size:.6rem"
+      >
+        <span
+          :class="{
+            'text-red-500': summary.pdp > prevSummary.pdp,
+            'text-green-500': summary.pdp < prevSummary.pdp,
+            'text-gray-500': summary.pdp == prevSummary.pdp,
+          }"
+        >
           <i v-if="summary.pdp > prevSummary.pdp" class="icon-arrow-up"></i>
           <i v-if="summary.pdp < prevSummary.pdp" class="icon-arrow-down"></i>
           {{ summary.pdp }} total
         </span>
         <span class="text-gray-500 mx-2">/</span>
-        <span :class="{
-          'text-green-500': summary.pdpps > prevSummary.pdpps,
-          'text-red-500': summary.pdpps < prevSummary.pdpps,
-          'text-gray-500': summary.pdpps == prevSummary.pdpps
-        }">
+        <span
+          :class="{
+            'text-green-500': summary.pdpps > prevSummary.pdpps,
+            'text-red-500': summary.pdpps < prevSummary.pdpps,
+            'text-gray-500': summary.pdpps == prevSummary.pdpps,
+          }"
+        >
           <i v-if="summary.pdpps > prevSummary.pdpps" class="icon-arrow-up"></i>
-          <i v-if="summary.pdpps < prevSummary.pdpps" class="icon-arrow-down"></i>
+          <i
+            v-if="summary.pdpps < prevSummary.pdpps"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.pdpps }} sehat
         </span>
       </h4>
 
-      <h4 v-if="summary && showDetailSummary && heatType == 'ODP'" @click="showDetailSummary = false" class="mt-0 cursor-pointer" style="font-size:.6rem">
-        <span :class="{
-          'text-red-500': summary.odp > prevSummary.odp,
-          'text-green-500': summary.odp < prevSummary.odp,
-          'text-gray-500': summary.odp == prevSummary.odp
-        }">
+      <h4
+        v-if="summary && showDetailSummary && heatType == 'ODP'"
+        @click="showDetailSummary = false"
+        class="mt-0 cursor-pointer"
+        style="font-size:.6rem"
+      >
+        <span
+          :class="{
+            'text-red-500': summary.odp > prevSummary.odp,
+            'text-green-500': summary.odp < prevSummary.odp,
+            'text-gray-500': summary.odp == prevSummary.odp,
+          }"
+        >
           <i v-if="summary.odp > prevSummary.odp" class="icon-arrow-up"></i>
           <i v-if="summary.odp < prevSummary.odp" class="icon-arrow-down"></i>
           {{ summary.odp }} total
         </span>
         <span class="text-gray-500 mx-2">/</span>
-        <span :class="{
-          'text-green-500': summary.odpsp > prevSummary.odpsp,
-          'text-red-500': summary.odpsp < prevSummary.odpsp,
-          'text-gray-500': summary.odpsp == prevSummary.odpsp
-        }">
+        <span
+          :class="{
+            'text-green-500': summary.odpsp > prevSummary.odpsp,
+            'text-red-500': summary.odpsp < prevSummary.odpsp,
+            'text-gray-500': summary.odpsp == prevSummary.odpsp,
+          }"
+        >
           <i v-if="summary.odpsp > prevSummary.odpsp" class="icon-arrow-up"></i>
-          <i v-if="summary.odpsp < prevSummary.odpsp" class="icon-arrow-down"></i>
+          <i
+            v-if="summary.odpsp < prevSummary.odpsp"
+            class="icon-arrow-down"
+          ></i>
           {{ summary.odpsp }} selesai
         </span>
       </h4>
     </div>
     <div class="bottom-bar" v-if="ready">
       <div class="flex justify-center mb-3">
-        <button v-if="!playing" @click="play" class="control-btn rounded-full text-center text-3xl" :class="{
-          'bg-teal-500 hover:bg-teal-600 text-white': !isLast && !isFirst && playing,
-          'bg-gray-600 hover:bg-gray-700 text-gray-300': !playing,
-        }">
+        <button
+          v-if="!playing"
+          @click="play"
+          class="control-btn rounded-full text-center text-3xl"
+          :class="{
+            'bg-teal-500 hover:bg-teal-600 text-white':
+              !isLast && !isFirst && playing,
+            'bg-gray-600 hover:bg-gray-700 text-gray-300': !playing,
+          }"
+        >
           <i class="icon-play"></i>
         </button>
-        <button v-if="playing" @click="pause" class="control-btn rounded-full bg-teal-500 hover:bg-teal-600 text-white text-center text-3xl">
+        <button
+          v-if="playing"
+          @click="pause"
+          class="control-btn rounded-full bg-teal-500 hover:bg-teal-600 text-white text-center text-3xl"
+        >
           <i class="icon-pause"></i>
         </button>
       </div>
@@ -191,32 +292,32 @@ export default {
       ready: false,
       data: [],
       tileLayer: null,
-      heatType: 'POSITIF',
+      heatType: "POSITIF",
       heatLayer: null,
       pdpHeatLayer: null,
       odpHeatLayer: null,
       playIndex: -1,
       playing: false,
       showDetailSummary: false,
-      delayDuration: 500,
+      delayDuration: 750,
       dateRange: [],
       markers: [],
       summaries: {},
       hiddenIcon: Leaflet.icon({
-        iconUrl: './hidden-marker.png',
+        iconUrl: "./hidden-marker.png",
         iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        iconAnchor: [15, 15],
       }),
       ripIcon: Leaflet.icon({
-        iconUrl: './rip-marker.png',
+        iconUrl: "./rip-marker.png",
         iconSize: [30, 29],
-        iconAnchor: [15, 15]
+        iconAnchor: [15, 15],
       }),
       healthIcon: Leaflet.icon({
-        iconUrl: './health-marker.png',
+        iconUrl: "./health-marker.png",
         iconSize: [30, 26],
-        iconAnchor: [15, 13]
-      })
+        iconAnchor: [15, 13],
+      }),
     };
   },
   filters: {
@@ -244,7 +345,9 @@ export default {
       if (this.playIndex === -1) {
         return;
       }
-      return format(this.dateRange[this.playIndex], "dd LLLL yyyy", { locale: id });
+      return format(this.dateRange[this.playIndex], "dd LLLL yyyy", {
+        locale: id,
+      });
     },
     isLast() {
       return this.playIndex === this.dateRange.length - 1;
@@ -259,7 +362,7 @@ export default {
       if (this.playIndex === 0) {
         return this.summary;
       }
-      const date = format(this.dateRange[this.playIndex - 1], 'yyyy-MM-dd');
+      const date = format(this.dateRange[this.playIndex - 1], "yyyy-MM-dd");
       return this.summaries[date];
     },
     summary() {
@@ -267,7 +370,7 @@ export default {
         return null;
       }
 
-      const date = format(this.dateRange[this.playIndex], 'yyyy-MM-dd');
+      const date = format(this.dateRange[this.playIndex], "yyyy-MM-dd");
       return this.summaries[date];
     },
   },
@@ -282,10 +385,10 @@ export default {
       if (this.heatLayer) {
         this.heatLayer.setOptions({
           gradient: this.getGradient(),
-          minOpacity: this.getMinOpacity()
-        })
+          minOpacity: this.getMinOpacity(),
+        });
       }
-    }
+    },
   },
   async mounted() {
     await this.initMap();
@@ -294,14 +397,14 @@ export default {
   },
   methods: {
     initMap() {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         this.map = Leaflet.map("map", {
           minZoom: 10,
           zoomControl: false,
         })
-        .on('load', () => resolve())
-        .setView([-6.229728, 106.8094337], 11);
-  
+          .on("load", () => resolve())
+          .setView([-6.229728, 106.8094337], 11);
+
         this.tileLayer = Leaflet.tileLayer(
           "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
           {
@@ -311,7 +414,6 @@ export default {
             maxZoom: 19,
           }
         ).addTo(this.map);
-
       });
     },
     async loadData() {
@@ -343,14 +445,16 @@ export default {
       return dateRange;
     },
     getSummaries(data, dateRange) {
-      const dataAt = date => {
-        const tanggal = format(date, 'yyyy-MM-dd')
-        const d = data.filter(x => x.tanggal == tanggal).filter(x => this.kelurahan[x.kelurahan]);
+      const dataAt = (date) => {
+        const tanggal = format(date, "yyyy-MM-dd");
+        const d = data
+          .filter((x) => x.tanggal == tanggal)
+          .filter((x) => this.kelurahan[x.kelurahan]);
         return d.length ? d : dataAt(addDays(new Date(date), -1));
       };
 
       const summaries = {};
-      dateRange.forEach(date => {
+      dateRange.forEach((date) => {
         const summary = {
           odp: 0,
           odpsp: 0,
@@ -365,7 +469,7 @@ export default {
           active: 0,
         };
         const data = dataAt(date);
-        data.forEach(d => {
+        data.forEach((d) => {
           summary.odp += d.odp;
           summary.odppp += d.odpsp;
           summary.odpsp += d.odppp;
@@ -376,10 +480,10 @@ export default {
           summary.meninggal += d.meninggal;
           summary.sembuh += d.sembuh;
           summary.dirawat += d.dirawat;
-          summary.active += (d.positif - (d.meninggal + d.sembuh));
+          summary.active += d.positif - (d.meninggal + d.sembuh);
         });
 
-        summaries[format(new Date(date), 'yyyy-MM-dd')] = {...summary};
+        summaries[format(new Date(date), "yyyy-MM-dd")] = { ...summary };
       });
 
       return summaries;
@@ -387,9 +491,11 @@ export default {
     resolveData(data, dateRange) {
       let resolvedData = [];
 
-      const dataAt = date => {
-        const tanggal = format(date, 'yyyy-MM-dd')
-        const d = data.filter(x => x.tanggal == tanggal).filter(x => this.kelurahan[x.kelurahan]);
+      const dataAt = (date) => {
+        const tanggal = format(date, "yyyy-MM-dd");
+        const d = data
+          .filter((x) => x.tanggal == tanggal)
+          .filter((x) => this.kelurahan[x.kelurahan]);
         return d.length ? d : dataAt(addDays(new Date(date), -1));
       };
 
@@ -397,7 +503,10 @@ export default {
         const prevDate = addDays(new Date(date), -1);
         const currData = dataAt(new Date(date));
         const prevData = i === 0 ? currData : dataAt(prevDate);
-        resolvedData = [...resolvedData, ...this.getUpdates(currData, prevData)];
+        resolvedData = [
+          ...resolvedData,
+          ...this.getUpdates(currData, prevData),
+        ];
       });
 
       return resolvedData;
@@ -411,14 +520,15 @@ export default {
       return data.length ? data : this.getData(dateBefore);
     },
     getUpdates(data, prevData) {
-      const resolve = (data) => data.reduce((result, d) => ({...result, [d.kelurahan]: d}), {})
-      const keyedData = resolve(data)
-      const prevKeyedData = resolve(prevData)
+      const resolve = (data) =>
+        data.reduce((result, d) => ({ ...result, [d.kelurahan]: d }), {});
+      const keyedData = resolve(data);
+      const prevKeyedData = resolve(prevData);
 
-      const updates = []
+      const updates = [];
       for (let kelurahan in keyedData) {
-        const curr = keyedData[kelurahan]
-        const prev = prevKeyedData[kelurahan] || curr
+        const curr = keyedData[kelurahan];
+        const prev = prevKeyedData[kelurahan] || curr;
         updates.push({
           ...curr,
           updates: {
@@ -427,16 +537,21 @@ export default {
             odp: curr.odp - prev.odp,
             sembuh: curr.sembuh - prev.sembuh,
             meninggal: curr.meninggal - prev.meninggal,
-          }
-        })
+          },
+        });
       }
-      return updates
+      return updates;
     },
     showAt(index) {
-      const date = format(this.dateRange[index], "yyyy-MM-dd")
+      const date = format(this.dateRange[index], "yyyy-MM-dd");
       const data = this.getData(date);
-      this.showHeat(data)
-      this.showMarkers(data)
+      this.showHeat(data);
+      this.showMarkers(data);
+      this.showPoints(data);
+      if (this.heatType == 'POSITIF') {
+        this.showDeathPoints(data);
+        this.showRecoverPoints(data);
+      }
     },
     showHeat(data) {
       const heatData = data.map((data) => [
@@ -463,87 +578,239 @@ export default {
       }
     },
     clearMarkers() {
-      this.markers.forEach(marker => marker.remove())
-      this.markers.splice(0)
+      this.markers.forEach((marker) => marker.remove());
+      this.markers.splice(0);
     },
     showMarkers(data) {
-      this.clearMarkers()
-
+      this.clearMarkers();
 
       for (let d of data) {
-        const latlng = this.kelurahan[d.kelurahan]
-        const title = d.kelurahan
+        const latlng = this.kelurahan[d.kelurahan];
+        const title = d.kelurahan;
         const marker = Leaflet.marker(latlng, { title, icon: this.getIcon(d) })
           .addTo(this.map)
-          .bindPopup(this.getPopup(d))
+          .bindPopup(this.getPopup(d));
 
-        this.markers.push(marker)
+        this.markers.push(marker);
       }
     },
-    getIcon(d) {
-      if (d.updates.meninggal > 0) {
-        return this.ripIcon
-      }
+    async showPoints(data) {
+      const points = data
+        .map((d, i) => ({
+          id: `pv${i}`,
+          latlng: this.kelurahan[d.kelurahan],
+          value: this.getPointValue(d),
+        }))
+        .filter((d) => d.value > 0);
 
-      if (d.updates.sembuh > 0) {
-        return this.healthIcon
-      }
+      for (let d of points) {
+        const size = 20 + d.value * 1.5;
 
-      return this.hiddenIcon
+        const bg =
+          d.value > 10
+            ? `rgba(150, 0, 100, .75)`
+            : d.value > 5
+            ? `rgba(255, 0, 200, .5)`
+            : `rgba(255, 0, 200, .2)`;
+
+        const styles = [
+          `width: ${size}px`,
+          `height: ${size}px`,
+          `line-height: ${size}px`,
+          `font-size: ${size * 0.5}px`,
+          `background: ${bg}`,
+        ];
+
+        const icon = Leaflet.divIcon({
+          className: "point-marker text-red-500",
+          html: `<b id="${d.id}" style="${styles.join(";")}">${d.value}<b>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+
+        const marker = Leaflet.marker(d.latlng, { icon }).addTo(this.map)
+
+        setTimeout(() => {
+          document.getElementById(d.id).classList.add("shown");
+          setTimeout(() => marker.remove(), 500);
+        }, 10);
+
+        await this.delay(5);
+      }
+    },
+    async showRecoverPoints(data) {
+      const points = data
+        .filter(d => d.updates.sembuh > 0)
+        .map((d, i) => ({
+          id: `pr${i}`,
+          latlng: this.kelurahan[d.kelurahan],
+          value: d.updates.sembuh,
+        }));
+
+      for (let d of points) {
+        const size = 25 + d.value * 1.5;
+
+        const styles = [
+          `width: ${size}px`,
+          `height: ${size}px`,
+          `line-height: ${size}px`,
+          `font-size: ${size * 0.5}px`,
+          `background: rgba(0, 255, 0, .3)`,
+        ];
+
+        const icon = Leaflet.divIcon({
+          className: "point-marker text-green-500",
+          html: `<b id="${d.id}" style="${styles.join(";")}">${d.value}<b>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+
+        const marker = Leaflet.marker(d.latlng, { icon }).addTo(this.map)
+
+        setTimeout(() => {
+          document.getElementById(d.id).classList.add("shown");
+          setTimeout(() => marker.remove(), 500);
+        }, 10);
+
+        await this.delay(10);
+      }
+    },
+    async showDeathPoints(data) {
+      const points = data
+        .filter(d => d.updates.meninggal > 0)
+        .map((d, i) => ({
+          id: `pr${i}`,
+          latlng: this.kelurahan[d.kelurahan],
+          value: d.updates.meninggal,
+        }));
+
+      for (let d of points) {
+        const size = 30 + d.value * 1.5;
+
+        const styles = [
+          `width: ${size}px`,
+          `height: ${size}px`,
+          `line-height: ${size}px`,
+          `font-size: ${size * 0.5}px`,
+          `background: rgba(255, 0, 0, .7)`,
+        ];
+
+        const icon = Leaflet.divIcon({
+          className: "point-marker text-red-500",
+          html: `<b id="${d.id}" style="${styles.join(";")}">${d.value}<b>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+
+        const marker = Leaflet.marker(d.latlng, { icon }).addTo(this.map)
+
+        setTimeout(() => {
+          document.getElementById(d.id).classList.add("shown");
+          setTimeout(() => marker.remove(), 500);
+        }, 10);
+
+        await this.delay(10);
+      }
+    },
+    getPointValue(d) {
+      switch (this.heatType) {
+        case "POSITIF":
+          return d.updates.positif;
+        case "ODP":
+          return d.updates.odp;
+        case "PDP":
+          return d.updates.pdp;
+      }
+      return 0;
+    },
+    getIcon() {
+      // if (d.updates.meninggal > 0) {
+      //   return this.ripIcon;
+      // }
+
+      // if (d.updates.sembuh > 0) {
+      //   return this.healthIcon;
+      // }
+
+      return this.hiddenIcon;
     },
     getPopup(data) {
-      const n = x => x > 0 ? `+${x}` : x
+      const n = (x) => (x > 0 ? `+${x}` : x);
       return [
         data.kelurahan,
-        `Positif: ${data.positif} ${data.updates.positif !== 0 ? '('+n(data.updates.positif)+')' : ''}`,
-        `Sembuh: ${data.sembuh} ${data.updates.sembuh !== 0 ? '('+n(data.updates.sembuh)+')' : ''}`,
-        `Meninggal: ${data.meninggal} ${data.updates.meninggal !== 0 ? '('+n(data.updates.meninggal)+')' : ''}`,
-        `PDP: ${data.pdp} ${data.updates.pdp !== 0 ? '('+n(data.updates.pdp)+')' : ''}`,
-        `ODP: ${data.odp} ${data.updates.odp !== 0 ? '('+n(data.updates.odp)+')' : ''}`,
-      ].join('<br/>')
+        `Positif: ${data.positif} ${
+          data.updates.positif !== 0 ? "(" + n(data.updates.positif) + ")" : ""
+        }`,
+        `Sembuh: ${data.sembuh} ${
+          data.updates.sembuh !== 0 ? "(" + n(data.updates.sembuh) + ")" : ""
+        }`,
+        `Meninggal: ${data.meninggal} ${
+          data.updates.meninggal !== 0
+            ? "(" + n(data.updates.meninggal) + ")"
+            : ""
+        }`,
+        `PDP: ${data.pdp} ${
+          data.updates.pdp !== 0 ? "(" + n(data.updates.pdp) + ")" : ""
+        }`,
+        `ODP: ${data.odp} ${
+          data.updates.odp !== 0 ? "(" + n(data.updates.odp) + ")" : ""
+        }`,
+      ].join("<br/>");
     },
     getIntensity(data) {
       switch (this.heatType) {
-        case 'POSITIF': return (data.positif - (data.sembuh + data.meninggal)) / this.highestPositive
-        case 'ODP': return (data.odp - data.odpsp) / this.highestOdp
-        case 'PDP': return (data.pdp - data.pdpps) / this.highestPdp
+        case "POSITIF":
+          return (
+            (data.positif - (data.sembuh + data.meninggal)) /
+            this.highestPositive
+          );
+        case "ODP":
+          return (data.odp - data.odpsp) / this.highestOdp;
+        case "PDP":
+          return (data.pdp - data.pdpps) / this.highestPdp;
       }
     },
     getRadius() {
       const zoom = this.map.getZoom();
-      return zoom < 11 ? 10 : ((zoom - 10) * 17) + 1;
+      return zoom < 11 ? 10 : (zoom - 10) * 17 + 1;
     },
     getBlur() {
       const zoom = this.map.getZoom();
-      return zoom < 11 ? 10 : ((zoom - 10) * 14) + 1;
+      return zoom < 11 ? 10 : (zoom - 10) * 14 + 1;
     },
     getGradient() {
       switch (this.heatType) {
-        case 'POSITIF': return {
-          0.15: "#00aad4",
-          0.3: "#0076ba",
-          0.45: "lime",
-          0.6: "yellow",
-          0.75: "orange",
-          1: "red",
-        }
-        case 'PDP': return {
-          0.3: "#666",
-          0.6: "#aba",
-          1: "#8fb",
-        }
-        case 'ODP': return {
-          0.3: "#666",
-          0.6: "#aab",
-          1: "#8cf",
-        }
+        case "POSITIF":
+          return {
+            0.15: "#00aad4",
+            0.3: "#0076ba",
+            0.45: "lime",
+            0.6: "yellow",
+            0.75: "orange",
+            1: "red",
+          };
+        case "PDP":
+          return {
+            0.3: "#666",
+            0.6: "#aba",
+            1: "#8fb",
+          };
+        case "ODP":
+          return {
+            0.3: "#666",
+            0.6: "#aab",
+            1: "#8cf",
+          };
       }
     },
     getMinOpacity() {
       switch (this.heatType) {
-        case 'POSITIF': return 0.1
-        case 'PDP': return 0.05
-        case 'ODP': return 0.05
+        case "POSITIF":
+          return 0.1;
+        case "PDP":
+          return 0.05;
+        case "ODP":
+          return 0.05;
       }
     },
     async play() {
@@ -551,20 +818,20 @@ export default {
         this.playIndex = -1;
         await this.delay(100);
       }
-      this.playing = true
+      this.playing = true;
       // eslint-disable-next-line
       for (let date of this.dateRange.slice(this.playIndex + 1)) {
         if (this.playing == false) {
-          return
+          return;
         }
         this.playIndex++;
         await this.delay(this.delayDuration);
       }
 
-      this.playing = false
+      this.playing = false;
     },
     pause() {
-      this.playing = false
+      this.playing = false;
     },
     next() {
       if (this.playIndex < this.dateRange.length - 1) {
@@ -628,8 +895,26 @@ body {
   height: 60px;
 }
 
-button:active, 
+button:active,
 button:focus {
   outline: none;
+}
+
+.point-marker {
+  z-index: 9999999999;
+  text-align: center;
+}
+
+.point-marker b {
+  display: block;
+  transform: scale(0);
+  opacity: 0;
+  border-radius: 50%;
+  transition: all 0.3s ease-out;
+}
+
+.point-marker b.shown {
+  opacity: 1;
+  transform: scale(1);
 }
 </style>
