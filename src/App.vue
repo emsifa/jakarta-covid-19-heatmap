@@ -1,8 +1,7 @@
 <template>
   <div id="app">
     <div id="map"></div>
-    <div class="top-bar">
-      <h1 class="text-3xl text-white mb-3">{{ playDate }}</h1>
+    <div class="top-bar" v-if="ready">
       <div class="flex justify-center">
         <div class="inline-flex">
           <button @click="heatType = 'PDP'" class="font-bold py-2 px-4 rounded-l" :class="{
@@ -25,13 +24,115 @@
           </button>
         </div>
       </div>
-      <h4>
-        <span class="bg-text-blue">{{ totalActiveCases }}</span>
-        /
-        <span class="text-red-500">{{ totalAllCases }}</span>
+      <h1 class="text-4xl text-white mt-3">{{ playDate }}</h1>
+      <h4 v-if="summary && !showDetailSummary" @click="showDetailSummary = true" class="mt-0 text-lg cursor-pointer">
+        <span v-if="heatType == 'POSITIF'" :class="{
+          'text-red-500': summary.active > prevSummary.active,
+          'text-green-500': summary.active < prevSummary.active,
+          'text-gray-500': summary.active == prevSummary.active
+        }">
+          <i v-if="summary.active > prevSummary.active" class="icon-arrow-up"></i>
+          <i v-if="summary.active < prevSummary.active" class="icon-arrow-down"></i>
+          {{ summary.active }} kasus aktif
+        </span>
+
+        <span v-if="heatType == 'ODP'" :class="{
+          'text-red-500': summary.odppp > prevSummary.odppp,
+          'text-green-500': summary.odppp < prevSummary.odppp,
+          'text-gray-500': summary.odppp == prevSummary.odppp
+        }">
+          <i v-if="summary.odppp > prevSummary.odppp" class="icon-arrow-up"></i>
+          <i v-if="summary.odppp < prevSummary.odppp" class="icon-arrow-down"></i>
+          {{ summary.odppp }} DIPANTAU
+        </span>
+
+        <span v-if="heatType == 'PDP'" :class="{
+          'text-red-500': summary.pdpmd > prevSummary.pdpmd,
+          'text-green-500': summary.pdpmd < prevSummary.pdpmd,
+          'text-gray-500': summary.pdpmd == prevSummary.pdpmd
+        }">
+          <i v-if="summary.pdpmd > prevSummary.pdpmd" class="icon-arrow-up"></i>
+          <i v-if="summary.pdpmd < prevSummary.pdpmd" class="icon-arrow-down"></i>
+          {{ summary.pdpmd }} DIRAWAT
+        </span>
+      </h4>
+      <h4 v-if="summary && showDetailSummary && heatType == 'POSITIF'" @click="showDetailSummary = false" class="mt-0 cursor-pointer" style="font-size:.6rem">
+        <span :class="{
+          'text-red-500': summary.positif > prevSummary.positif,
+          'text-green-500': summary.positif < prevSummary.positif,
+          'text-gray-500': summary.positif == prevSummary.positif
+        }">
+          <i v-if="summary.positif > prevSummary.positif" class="icon-arrow-up"></i>
+          <i v-if="summary.positif < prevSummary.positif" class="icon-arrow-down"></i>
+          {{ summary.positif }} total
+        </span>
+        <span class="text-gray-500 mx-2">/</span>
+        <span :class="{
+          'text-red-500': summary.meninggal > prevSummary.meninggal,
+          'text-green-500': summary.meninggal < prevSummary.meninggal,
+          'text-gray-500': summary.meninggal == prevSummary.meninggal
+        }">
+          <i v-if="summary.meninggal > prevSummary.meninggal" class="icon-arrow-up"></i>
+          <i v-if="summary.meninggal < prevSummary.meninggal" class="icon-arrow-down"></i>
+          {{ summary.meninggal }} meninggal
+        </span>
+        <span class="text-gray-500 mx-2">/</span>
+        <span :class="{
+          'text-green-500': summary.sembuh > prevSummary.sembuh,
+          'text-red-500': summary.sembuh < prevSummary.sembuh,
+          'text-gray-500': summary.sembuh == prevSummary.sembuh
+        }">
+          <i v-if="summary.sembuh > prevSummary.sembuh" class="icon-arrow-up"></i>
+          <i v-if="summary.sembuh < prevSummary.sembuh" class="icon-arrow-down"></i>
+          {{ summary.sembuh }} sembuh
+        </span>
+      </h4>
+
+      <h4 v-if="summary && showDetailSummary && heatType == 'PDP'" @click="showDetailSummary = false" class="mt-0 cursor-pointer" style="font-size:.6rem">
+        <span :class="{
+          'text-red-500': summary.pdp > prevSummary.pdp,
+          'text-green-500': summary.pdp < prevSummary.pdp,
+          'text-gray-500': summary.pdp == prevSummary.pdp
+        }">
+          <i v-if="summary.pdp > prevSummary.pdp" class="icon-arrow-up"></i>
+          <i v-if="summary.pdp < prevSummary.pdp" class="icon-arrow-down"></i>
+          {{ summary.pdp }} total
+        </span>
+        <span class="text-gray-500 mx-2">/</span>
+        <span :class="{
+          'text-green-500': summary.pdpps > prevSummary.pdpps,
+          'text-red-500': summary.pdpps < prevSummary.pdpps,
+          'text-gray-500': summary.pdpps == prevSummary.pdpps
+        }">
+          <i v-if="summary.pdpps > prevSummary.pdpps" class="icon-arrow-up"></i>
+          <i v-if="summary.pdpps < prevSummary.pdpps" class="icon-arrow-down"></i>
+          {{ summary.pdpps }} sehat
+        </span>
+      </h4>
+
+      <h4 v-if="summary && showDetailSummary && heatType == 'ODP'" @click="showDetailSummary = false" class="mt-0 cursor-pointer" style="font-size:.6rem">
+        <span :class="{
+          'text-red-500': summary.odp > prevSummary.odp,
+          'text-green-500': summary.odp < prevSummary.odp,
+          'text-gray-500': summary.odp == prevSummary.odp
+        }">
+          <i v-if="summary.odp > prevSummary.odp" class="icon-arrow-up"></i>
+          <i v-if="summary.odp < prevSummary.odp" class="icon-arrow-down"></i>
+          {{ summary.odp }} total
+        </span>
+        <span class="text-gray-500 mx-2">/</span>
+        <span :class="{
+          'text-green-500': summary.odpsp > prevSummary.odpsp,
+          'text-red-500': summary.odpsp < prevSummary.odpsp,
+          'text-gray-500': summary.odpsp == prevSummary.odpsp
+        }">
+          <i v-if="summary.odpsp > prevSummary.odpsp" class="icon-arrow-up"></i>
+          <i v-if="summary.odpsp < prevSummary.odpsp" class="icon-arrow-down"></i>
+          {{ summary.odpsp }} selesai
+        </span>
       </h4>
     </div>
-    <div class="bottom-bar">
+    <div class="bottom-bar" v-if="ready">
       <div class="flex justify-center mb-3">
         <button v-if="!playing" @click="play" class="control-btn rounded-full text-center text-3xl" :class="{
           'bg-teal-500 hover:bg-teal-600 text-white': !isLast && !isFirst && playing,
@@ -79,6 +180,7 @@ import kelurahan from "./data/kelurahan";
 import Leaflet from "./leaflet";
 import format from "date-fns/format";
 import addDays from "date-fns/addDays";
+import id from "date-fns/locale/id";
 
 export default {
   name: "App",
@@ -86,6 +188,7 @@ export default {
     return {
       kelurahan,
       map: null,
+      ready: false,
       data: [],
       tileLayer: null,
       heatType: 'POSITIF',
@@ -94,9 +197,11 @@ export default {
       odpHeatLayer: null,
       playIndex: -1,
       playing: false,
+      showDetailSummary: false,
       delayDuration: 500,
       dateRange: [],
       markers: [],
+      summaries: {},
       hiddenIcon: Leaflet.icon({
         iconUrl: './hidden-marker.png',
         iconSize: [30, 30],
@@ -116,7 +221,7 @@ export default {
   },
   filters: {
     format(value, fmt) {
-      return format(new Date(value), fmt);
+      return format(new Date(value), fmt, { locale: id }).toUpperCase();
     },
   },
   computed: {
@@ -139,13 +244,31 @@ export default {
       if (this.playIndex === -1) {
         return;
       }
-      return format(this.dateRange[this.playIndex], "dd LLLL yyyy");
+      return format(this.dateRange[this.playIndex], "dd LLLL yyyy", { locale: id });
     },
     isLast() {
       return this.playIndex === this.dateRange.length - 1;
     },
     isFirst() {
       return this.playIndex === 0;
+    },
+    prevSummary() {
+      if (this.playIndex < 0) {
+        return null;
+      }
+      if (this.playIndex === 0) {
+        return this.summary;
+      }
+      const date = format(this.dateRange[this.playIndex - 1], 'yyyy-MM-dd');
+      return this.summaries[date];
+    },
+    summary() {
+      if (this.playIndex < 0) {
+        return null;
+      }
+
+      const date = format(this.dateRange[this.playIndex], 'yyyy-MM-dd');
+      return this.summaries[date];
     },
   },
   watch: {
@@ -165,32 +288,38 @@ export default {
     }
   },
   async mounted() {
-    this.initMap();
+    await this.initMap();
     await this.loadData();
-    window.app = this;
+    this.ready = true;
   },
   methods: {
     initMap() {
-      this.map = Leaflet.map("map", {
-        minZoom: 10,
-        zoomControl: false,
-      }).setView([-6.229728, 106.8094337], 11);
+      return new Promise(resolve => {
+        this.map = Leaflet.map("map", {
+          minZoom: 10,
+          zoomControl: false,
+        })
+        .on('load', () => resolve())
+        .setView([-6.229728, 106.8094337], 11);
+  
+        this.tileLayer = Leaflet.tileLayer(
+          "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: "abcd",
+            maxZoom: 19,
+          }
+        ).addTo(this.map);
 
-      this.tileLayer = Leaflet.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 19,
-        }
-      ).addTo(this.map);
+      });
     },
     async loadData() {
       const response = await fetch("./data.json");
       const data = await response.json();
       this.dateRange = this.getDateRange(data);
       this.data = this.resolveData(data, this.dateRange);
+      this.summaries = this.getSummaries(data, this.dateRange);
       this.playIndex = 0;
     },
     getDateRange(data) {
@@ -212,6 +341,48 @@ export default {
       }
 
       return dateRange;
+    },
+    getSummaries(data, dateRange) {
+      const dataAt = date => {
+        const tanggal = format(date, 'yyyy-MM-dd')
+        const d = data.filter(x => x.tanggal == tanggal).filter(x => this.kelurahan[x.kelurahan]);
+        return d.length ? d : dataAt(addDays(new Date(date), -1));
+      };
+
+      const summaries = {};
+      dateRange.forEach(date => {
+        const summary = {
+          odp: 0,
+          odpsp: 0,
+          odppp: 0,
+          pdp: 0,
+          pdpmd: 0,
+          pdpps: 0,
+          positif: 0,
+          meninggal: 0,
+          dirawat: 0,
+          sembuh: 0,
+          active: 0,
+        };
+        const data = dataAt(date);
+        data.forEach(d => {
+          summary.odp += d.odp;
+          summary.odppp += d.odpsp;
+          summary.odpsp += d.odppp;
+          summary.pdp += d.pdp;
+          summary.pdpps += d.pdpps;
+          summary.pdpmd += d.pdpmd;
+          summary.positif += d.positif;
+          summary.meninggal += d.meninggal;
+          summary.sembuh += d.sembuh;
+          summary.dirawat += d.dirawat;
+          summary.active += (d.positif - (d.meninggal + d.sembuh));
+        });
+
+        summaries[format(new Date(date), 'yyyy-MM-dd')] = {...summary};
+      });
+
+      return summaries;
     },
     resolveData(data, dateRange) {
       let resolvedData = [];
