@@ -25,6 +25,11 @@
           </button>
         </div>
       </div>
+      <h4>
+        <span class="bg-text-blue">{{ totalActiveCases }}</span>
+        /
+        <span class="text-red-500">{{ totalAllCases }}</span>
+      </h4>
     </div>
     <div class="bottom-bar">
       <div class="flex justify-center mb-3">
@@ -90,6 +95,7 @@ export default {
       playIndex: -1,
       playing: false,
       delayDuration: 500,
+      dateRange: [],
       markers: [],
       hiddenIcon: Leaflet.icon({
         iconUrl: './hidden-marker.png',
@@ -128,32 +134,6 @@ export default {
       return this.data.reduce((highest, data) => {
         return data.odp > highest ? data.odp : highest;
       }, 0);
-    },
-    firstDate() {
-      return this.data.reduce((min, data) => {
-        const date = new Date(data.tanggal);
-        return date.getTime() < min.getTime() ? date : min;
-      }, new Date(2050, 0, 0));
-    },
-    lastDate() {
-      return this.data.reduce((max, data) => {
-        const date = new Date(data.tanggal);
-        return date.getTime() > max.getTime() ? date : max;
-      }, new Date(0, 0, 0));
-    },
-    dateRange() {
-      if (!this.firstDate || !this.lastDate) {
-        return [];
-      }
-
-      const dateRange = [];
-      const date = new Date(this.firstDate);
-      while (this.lastDate.getTime() >= date.getTime()) {
-        dateRange.push(new Date(date));
-        date.setDate(date.getDate() + 1);
-      }
-
-      return dateRange;
     },
     playDate() {
       if (this.playIndex === -1) {
@@ -208,8 +188,48 @@ export default {
     },
     async loadData() {
       const response = await fetch("./data.json");
-      this.data = await response.json();
+      const data = await response.json();
+      this.dateRange = this.getDateRange(data);
+      this.data = this.resolveData(data, this.dateRange);
       this.playIndex = 0;
+    },
+    getDateRange(data) {
+      const firstDate = data.reduce((min, data) => {
+        const date = new Date(data.tanggal);
+        return date.getTime() < min.getTime() ? date : min;
+      }, new Date(2050, 0, 0));
+
+      const lastDate = data.reduce((max, data) => {
+        const date = new Date(data.tanggal);
+        return date.getTime() > max.getTime() ? date : max;
+      }, new Date(0, 0, 0));
+
+      const dateRange = [];
+      const date = new Date(firstDate);
+      while (lastDate.getTime() >= date.getTime()) {
+        dateRange.push(new Date(date));
+        date.setDate(date.getDate() + 1);
+      }
+
+      return dateRange;
+    },
+    resolveData(data, dateRange) {
+      let resolvedData = [];
+
+      const dataAt = date => {
+        const tanggal = format(date, 'yyyy-MM-dd')
+        const d = data.filter(x => x.tanggal == tanggal).filter(x => this.kelurahan[x.kelurahan]);
+        return d.length ? d : dataAt(addDays(new Date(date), -1));
+      };
+
+      dateRange.forEach((date, i) => {
+        const prevDate = addDays(new Date(date), -1);
+        const currData = dataAt(new Date(date));
+        const prevData = i === 0 ? currData : dataAt(prevDate);
+        resolvedData = [...resolvedData, ...this.getUpdates(currData, prevData)];
+      });
+
+      return resolvedData;
     },
     getData(date) {
       const data = this.data
@@ -242,13 +262,10 @@ export default {
       return updates
     },
     showAt(index) {
-      const date = format(this.dateRange[this.playIndex], "yyyy-MM-dd")
-      const prevDate = format(addDays(new Date(date), -1), 'yyyy-MM-dd')
-      const currData = this.getData(date);
-      const prevData = index === 0 ? currData : this.getData(prevDate)
-      const dataWithUpdates = this.getUpdates(currData, prevData);
-      this.showHeat(dataWithUpdates)
-      this.showMarkers(dataWithUpdates)
+      const date = format(this.dateRange[index], "yyyy-MM-dd")
+      const data = this.getData(date);
+      this.showHeat(data)
+      this.showMarkers(data)
     },
     showHeat(data) {
       const heatData = data.map((data) => [
