@@ -90,6 +90,22 @@ export default {
       playIndex: -1,
       playing: false,
       delayDuration: 500,
+      markers: [],
+      hiddenIcon: Leaflet.icon({
+        iconUrl: './hidden-marker.png',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      }),
+      ripIcon: Leaflet.icon({
+        iconUrl: './rip-marker.png',
+        iconSize: [30, 29],
+        iconAnchor: [15, 15]
+      }),
+      healthIcon: Leaflet.icon({
+        iconUrl: './health-marker.png',
+        iconSize: [30, 26],
+        iconAnchor: [15, 13]
+      })
     };
   },
   filters: {
@@ -155,11 +171,11 @@ export default {
   watch: {
     playIndex(index) {
       if (index > -1) {
-        this.showHeat(format(this.dateRange[index], "yyyy-MM-dd"));
+        this.showAt(this.playIndex);
       }
     },
     heatType() {
-      this.showHeat(format(this.dateRange[this.playIndex], "yyyy-MM-dd"));
+      this.showAt(this.playIndex);
       if (this.heatLayer) {
         this.heatLayer.setOptions({
           gradient: this.getGradient(),
@@ -189,12 +205,6 @@ export default {
           maxZoom: 19,
         }
       ).addTo(this.map);
-
-      // for (let k in this.kelurahan) {
-      //   Leaflet.marker(this.kelurahan[k], {
-      //     title: k
-      //   }).addTo(this.map)
-      // }
     },
     async loadData() {
       const response = await fetch("./data.json");
@@ -209,8 +219,38 @@ export default {
       const dateBefore = format(addDays(new Date(date), -1), "yyyy-MM-dd");
       return data.length ? data : this.getData(dateBefore);
     },
-    showHeat(date) {
-      const data = this.getData(date);
+    getUpdates(data, prevData) {
+      const resolve = (data) => data.reduce((result, d) => ({...result, [d.kelurahan]: d}), {})
+      const keyedData = resolve(data)
+      const prevKeyedData = resolve(prevData)
+
+      const updates = []
+      for (let kelurahan in keyedData) {
+        const curr = keyedData[kelurahan]
+        const prev = prevKeyedData[kelurahan] || curr
+        updates.push({
+          ...curr,
+          updates: {
+            positif: curr.positif - prev.positif,
+            pdp: curr.pdp - prev.pdp,
+            odp: curr.odp - prev.odp,
+            sembuh: curr.sembuh - prev.sembuh,
+            meninggal: curr.meninggal - prev.meninggal,
+          }
+        })
+      }
+      return updates
+    },
+    showAt(index) {
+      const date = format(this.dateRange[this.playIndex], "yyyy-MM-dd")
+      const prevDate = format(addDays(new Date(date), -1), 'yyyy-MM-dd')
+      const currData = this.getData(date);
+      const prevData = index === 0 ? currData : this.getData(prevDate)
+      const dataWithUpdates = this.getUpdates(currData, prevData);
+      this.showHeat(dataWithUpdates)
+      this.showMarkers(dataWithUpdates)
+    },
+    showHeat(data) {
       const heatData = data.map((data) => [
         this.kelurahan[data.kelurahan][0], // lat
         this.kelurahan[data.kelurahan][1], // lng
@@ -234,11 +274,51 @@ export default {
         this.heatLayer.setLatLngs(heatData);
       }
     },
+    clearMarkers() {
+      this.markers.forEach(marker => marker.remove())
+      this.markers.splice(0)
+    },
+    showMarkers(data) {
+      this.clearMarkers()
+
+
+      for (let d of data) {
+        const latlng = this.kelurahan[d.kelurahan]
+        const title = d.kelurahan
+        const marker = Leaflet.marker(latlng, { title, icon: this.getIcon(d) })
+          .addTo(this.map)
+          .bindPopup(this.getPopup(d))
+
+        this.markers.push(marker)
+      }
+    },
+    getIcon(d) {
+      if (d.updates.meninggal > 0) {
+        return this.ripIcon
+      }
+
+      if (d.updates.sembuh > 0) {
+        return this.healthIcon
+      }
+
+      return this.hiddenIcon
+    },
+    getPopup(data) {
+      const n = x => x > 0 ? `+${x}` : x
+      return [
+        data.kelurahan,
+        `Positif: ${data.positif} ${data.updates.positif !== 0 ? '('+n(data.updates.positif)+')' : ''}`,
+        `Sembuh: ${data.sembuh} ${data.updates.sembuh !== 0 ? '('+n(data.updates.sembuh)+')' : ''}`,
+        `Meninggal: ${data.meninggal} ${data.updates.meninggal !== 0 ? '('+n(data.updates.meninggal)+')' : ''}`,
+        `PDP: ${data.pdp} ${data.updates.pdp !== 0 ? '('+n(data.updates.pdp)+')' : ''}`,
+        `ODP: ${data.odp} ${data.updates.odp !== 0 ? '('+n(data.updates.odp)+')' : ''}`,
+      ].join('<br/>')
+    },
     getIntensity(data) {
       switch (this.heatType) {
-        case 'POSITIF': return data.positif / this.highestPositive
-        case 'ODP': return data.odp / this.highestOdp
-        case 'PDP': return data.pdp / this.highestPdp
+        case 'POSITIF': return (data.positif - (data.sembuh + data.meninggal)) / this.highestPositive
+        case 'ODP': return (data.odp - data.odpsp) / this.highestOdp
+        case 'PDP': return (data.pdp - data.pdpps) / this.highestPdp
       }
     },
     getRadius() {
@@ -329,7 +409,7 @@ body {
   top: 0px;
   left: 0px;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   position: absolute;
   background-color: #efefef;
 }
@@ -358,5 +438,10 @@ body {
   line-height: 60px;
   width: 60px;
   height: 60px;
+}
+
+button:active, 
+button:focus {
+  outline: none;
 }
 </style>
