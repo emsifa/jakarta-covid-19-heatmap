@@ -248,7 +248,7 @@
       <div class="flex justify-center">
         <div class="inline-flex">
           <button
-            :disabled="isFirst"
+            :disabled="isFirst || playing"
             @click="prev"
             class="bg-gray-300 hover:bg-gray-400 disabled:opacity-75 text-gray-800 font-bold py-2 px-4 rounded-l"
           >
@@ -264,7 +264,7 @@
             </option>
           </select>
           <button
-            :disabled="isLast"
+            :disabled="isLast || playing"
             @click="next"
             class="bg-gray-300 hover:bg-gray-400 disabled:opacity-75 text-gray-800 font-bold py-2 px-4 rounded-r"
           >
@@ -376,7 +376,7 @@ export default {
   },
   watch: {
     playIndex(index) {
-      if (index > -1) {
+      if (index > -1 && !this.playing) {
         this.showAt(this.playIndex);
       }
     },
@@ -542,18 +542,21 @@ export default {
       }
       return updates;
     },
-    showAt(index) {
+    async showAt(index) {
       const date = format(this.dateRange[index], "yyyy-MM-dd");
       const data = this.getData(date);
-      this.showHeat(data);
-      this.showMarkers(data);
-      this.showPoints(data);
+      const promises = [
+        this.showMarkers(data),
+        this.showPoints(data),
+      ];
       if (this.heatType == 'POSITIF') {
-        this.showDeathPoints(data);
-        this.showRecoverPoints(data);
+        promises.push(this.showDeathPoints(data));
+        promises.push(this.showRecoverPoints(data));
       }
+      await Promise.all(promises);
+      this.showHeat(data);
     },
-    showHeat(data) {
+    async showHeat(data) {
       const heatData = data.map((data) => [
         this.kelurahan[data.kelurahan][0], // lat
         this.kelurahan[data.kelurahan][1], // lng
@@ -581,7 +584,7 @@ export default {
       this.markers.forEach((marker) => marker.remove());
       this.markers.splice(0);
     },
-    showMarkers(data) {
+    async showMarkers(data) {
       this.clearMarkers();
 
       for (let d of data) {
@@ -635,7 +638,7 @@ export default {
           setTimeout(() => marker.remove(), 500);
         }, 10);
 
-        await this.delay(5);
+        await this.delay(2);
       }
     },
     async showRecoverPoints(data) {
@@ -672,7 +675,7 @@ export default {
           setTimeout(() => marker.remove(), 500);
         }, 10);
 
-        await this.delay(10);
+        await this.delay(5);
       }
     },
     async showDeathPoints(data) {
@@ -709,7 +712,7 @@ export default {
           setTimeout(() => marker.remove(), 500);
         }, 10);
 
-        await this.delay(10);
+        await this.delay(5);
       }
     },
     getPointValue(d) {
@@ -825,7 +828,7 @@ export default {
           return;
         }
         this.playIndex++;
-        await this.delay(this.delayDuration);
+        await this.showAt(this.playIndex);
       }
 
       this.playing = false;
