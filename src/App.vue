@@ -418,11 +418,24 @@ export default {
     },
     async loadData() {
       const response = await fetch("./data.json");
-      const data = await response.json();
+      const data = this.dataToArray(await response.json());
       this.dateRange = this.getDateRange(data);
       this.data = this.resolveData(data, this.dateRange);
       this.summaries = this.getSummaries(data, this.dateRange);
       this.playIndex = 0;
+    },
+    dataToArray(rawData) {
+      const data = [];
+      for (let kelurahan in rawData) {
+        for (let tanggal in rawData[kelurahan]) {
+          data.push({
+            kelurahan,
+            tanggal,
+            ...rawData[kelurahan][tanggal]
+          });
+        }
+      }
+      return data;
     },
     getDateRange(data) {
       const firstDate = data.reduce((min, data) => {
@@ -740,7 +753,7 @@ export default {
     getPopup(data) {
       const n = (x) => (x > 0 ? `+${x}` : x);
       return [
-        data.kelurahan,
+        data.kel,
         `Positif: ${data.positif} ${
           data.updates.positif !== 0 ? "(" + n(data.updates.positif) + ")" : ""
         }`,
