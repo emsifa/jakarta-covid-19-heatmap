@@ -763,7 +763,7 @@ export default {
     getPopup(data) {
       const n = (x) => (x > 0 ? `+${x}` : x);
       return [
-        data.kel,
+        data.kelurahan,
         `Positif: ${data.positif} ${
           data.updates.positif !== 0 ? "(" + n(data.updates.positif) + ")" : ""
         }`,
