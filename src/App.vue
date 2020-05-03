@@ -283,6 +283,64 @@
         </div>
       </div>
     </div>
+    
+    <div id="modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center" :class="{
+      'opacity-0 pointer-events-none': !activeKelurahan
+    }">
+      <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+      
+      <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        
+        <div @click="closeModal" class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
+          <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+            <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+          </svg>
+          <span class="text-sm">(Esc)</span>
+        </div>
+
+        <!-- Add margin if you want to see some of the overlay behind the modal-->
+        <div class="modal-content py-4 text-left px-6">
+          <!--Title-->
+          <div class="flex justify-between items-center pb-3">
+            <p class="text-2xl font-bold">{{ activeKelurahan }}</p>
+            <div @click="closeModal" class="modal-close cursor-pointer z-50">
+              <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!--Body-->
+          <div>
+            <h4 class="text-lg font-semibold">Grafik Jumlah Kasus Aktif</h4>
+            <chart-jumlah-kasus
+              style="width: 100%; height: 200px;"
+              v-if="dataJumlahPositif.length && activeKelurahan"
+              :data-positif="dataJumlahPositif"
+              :data-odp="dataJumlahOdp"
+              :data-pdp="dataJumlahPdp"
+              :dates="dateRange"
+            />
+            <h4 class="text-lg font-semibold mt-3">Grafik Penambahan Kasus</h4>
+            <chart-penambahan-kasus
+              style="width: 100%; height: 200px;"
+              v-if="dataPenambahanPositif.length"
+              :data-positif="dataPenambahanPositif"
+              :data-odp="dataPenambahanOdp"
+              :data-pdp="dataPenambahanPdp"
+              :dates="dateRange"
+            />
+          </div>
+
+          <!--Footer-->
+          <!-- <div class="flex justify-end pt-2">
+            <button @click="closeModal" class="px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2">Action</button>
+            <button @click="closeModal" class="modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400">Close</button>
+          </div> -->
+          
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -292,9 +350,15 @@ import Leaflet from "./leaflet";
 import format from "date-fns/format";
 import addDays from "date-fns/addDays";
 import id from "date-fns/locale/id";
+import ChartPenambahanKasus from "./components/ChartPenambahanKasus";
+import ChartJumlahKasus from "./components/ChartJumlahKasus";
 
 export default {
   name: "App",
+  components: {
+    ChartPenambahanKasus,
+    ChartJumlahKasus,
+  },
   data() {
     return {
       kelurahan,
@@ -313,6 +377,7 @@ export default {
       dateRange: [],
       markers: [],
       summaries: {},
+      activeKelurahan: null,
       hiddenIcon: Leaflet.icon({
         iconUrl: "./hidden-marker.png",
         iconSize: [30, 30],
@@ -383,6 +448,61 @@ export default {
       const date = format(this.dateRange[this.playIndex], "yyyy-MM-dd");
       return this.summaries[date];
     },
+    dataPenambahanPositif() {
+      if (!this.activeKelurahan) {
+        return [];
+      }
+      return this.data
+        .filter(d => d.kelurahan == this.activeKelurahan)
+        .map(d => d.updates.positif)
+        .map(d => d < 0 ? 0 : d);
+    },
+    dataPenambahanPdp() {
+      if (!this.activeKelurahan) {
+        return [];
+      }
+      return this.data
+        .filter(d => d.kelurahan == this.activeKelurahan)
+        .map(d => d.updates.pdp)
+        .map(d => d < 0 ? 0 : d);
+    },
+    dataPenambahanOdp() {
+      if (!this.activeKelurahan) {
+        return [];
+      }
+      return this.data
+        .filter(d => d.kelurahan == this.activeKelurahan)
+        .map(d => d.updates.odp)
+        .map(d => d < 0 ? 0 : d);
+    },
+    dataJumlahPositif() {
+      if (!this.activeKelurahan) {
+        return [];
+      }
+      return this.data
+        .filter(d => d.kelurahan == this.activeKelurahan)
+        .map(d => d.positif - (d.meninggal + d.sembuh))
+        .map(d => d < 0 ? 0 : d);
+    },
+    dataJumlahPdp() {
+      if (!this.activeKelurahan) {
+        return [];
+      }
+      return this.data
+        .filter(d => d.kelurahan == this.activeKelurahan)
+        .map(d => d.pdp - d.pdpps)
+        .map(d => d < 0 ? 0 : d);
+    },
+    dataJumlahOdp() {
+      if (!this.activeKelurahan) {
+        return [];
+      }
+      return this.data
+        .filter(d => d.kelurahan == this.activeKelurahan)
+        .map(d => d.odp - d.odpsp)
+        .map(d => d < 0 ? 0 : d);
+    },
+    
   },
   watch: {
     playIndex(index) {
@@ -404,6 +524,11 @@ export default {
     await this.initMap();
     await this.loadData();
     this.ready = true;
+    window.addEventListener('keydown', (e) => {
+      if (e.keyCode === 27 && this.activeKelurahan) {
+        this.closeModal();
+      }
+    })
   },
   methods: {
     initMap() {
@@ -615,10 +740,21 @@ export default {
         const title = d.kelurahan;
         const marker = Leaflet.marker(latlng, { title, icon: this.getIcon(d) })
           .addTo(this.map)
-          .bindPopup(this.getPopup(d));
+          // .bindPopup(this.getPopup(d))
+          .on('click', () => {
+            this.openModal(d.kelurahan);
+          });
 
         this.markers.push(marker);
       }
+    },
+    openModal(kelurahan) {
+      this.activeKelurahan = kelurahan;
+      document.body.classList.add('modal-active');
+    },
+    closeModal() {
+      this.activeKelurahan = null;
+      document.body.classList.remove('modal-active');
     },
     async showPoints(data) {
       const points = data
@@ -942,6 +1078,19 @@ button:focus {
 .point-marker b.shown {
   opacity: 1;
   transform: scale(1);
+}
+
+#modal {
+  z-index: 999999999;
+}
+
+.modal {
+  transition: opacity 0.25s ease;
+}
+
+body.modal-active {
+  overflow-x: hidden;
+  overflow-y: visible !important;
 }
 
 .preloader-container {
