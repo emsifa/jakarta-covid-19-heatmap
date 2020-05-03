@@ -944,11 +944,13 @@ export default {
       switch (this.heatType) {
         case "POSITIF":
           return {
-            0.15: "#00aad4",
-            0.3: "#0076ba",
-            0.45: "lime",
-            0.6: "yellow",
-            0.75: "orange",
+            0.1: "#1b46d2",
+            0.15: "#1b9cd2",
+            0.3: "#1bd2b2",
+            0.45: "#1bd25c",
+            0.6: "#31d21b",
+            0.75: "#87d21b",
+            0.9: "#d2711b",
             1: "red",
           };
         case "PDP":
