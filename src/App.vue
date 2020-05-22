@@ -557,7 +557,7 @@ export default {
       this.dateRange = this.getDateRange(data);
       this.data = this.resolveData(data, this.dateRange);
       this.summaries = this.getSummaries(data, this.dateRange);
-      this.playIndex = 0;
+      this.playIndex = this.dateRange.length - 1;
     },
     dataToArray(rawData) {
       const data = [];
