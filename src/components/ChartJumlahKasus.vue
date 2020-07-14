@@ -1,6 +1,7 @@
 <script>
 import { Line } from "vue-chartjs";
 import format from "date-fns/format";
+import zoom from 'chartjs-plugin-zoom';
 
 export default {
   extends: Line,
@@ -58,6 +59,23 @@ export default {
           },
         ],
       },
+      plugins: {
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+            speed: 30,
+            threshold: 10
+          },
+          zoom: {
+            enabled: true,
+            mode: 'x',
+            sensitivity: 0
+          },
+          onZoom: (e) => console.log('zoom', e),
+          onPan: (e) => console.log('pan', e),
+        }
+      }
     },
   }),
 
@@ -91,8 +109,8 @@ export default {
       };
     },
   },
-
   mounted() {
+    this.addPlugin(zoom);
     this.renderChart(this.chartdata, this.options);
   },
 };

@@ -320,6 +320,8 @@
               :data-odp="dataJumlahOdp"
               :data-pdp="dataJumlahPdp"
               :dates="dateRange"
+              @zoom="log"
+              @pan="log"
             />
             <h4 class="text-lg font-semibold mt-3">Grafik Penambahan Kasus</h4>
             <chart-penambahan-kasus
@@ -367,9 +369,8 @@ export default {
       data: [],
       tileLayer: null,
       heatType: "POSITIF",
-      heatLayer: null,
-      pdpHeatLayer: null,
-      odpHeatLayer: null,
+      activeCasesHeatLayer: null,
+      newCasesHeatLayer: null,
       playIndex: -1,
       playing: false,
       showDetailSummary: false,
@@ -512,9 +513,15 @@ export default {
     },
     heatType() {
       this.showAt(this.playIndex);
-      if (this.heatLayer) {
-        this.heatLayer.setOptions({
-          gradient: this.getGradient(),
+      if (this.activeCasesHeatLayer) {
+        this.activeCasesHeatLayer.setOptions({
+          gradient: this.getActiveCasesHeatGradient(),
+          minOpacity: this.getMinOpacity(),
+        });
+      }
+      if (this.newCasesHeatLayer) {
+        this.newCasesHeatLayer.setOptions({
+          gradient: this.getNewCasesHeatGradient(),
           minOpacity: this.getMinOpacity(),
         });
       }
@@ -531,6 +538,9 @@ export default {
     })
   },
   methods: {
+    log(e) {
+      console.log(e);
+    },
     initMap() {
       return new Promise((resolve) => {
         this.map = Leaflet.map("map", {
@@ -695,37 +705,63 @@ export default {
       const data = this.getData(date);
       const promises = [
         this.showMarkers(data),
-        this.showPoints(data),
+        // this.showPoints(data),
+        new Promise(resolve => setTimeout(resolve, 250)),
       ];
       if (this.heatType == 'POSITIF') {
-        promises.push(this.showDeathPoints(data));
-        promises.push(this.showRecoverPoints(data));
+        // promises.push(this.showDeathPoints(data));
+        // promises.push(this.showRecoverPoints(data));
       }
       await Promise.all(promises);
-      this.showHeat(data);
+      this.showActiveCasesHeat(data);
+      this.showNewCasesHeat(data);
     },
-    async showHeat(data) {
+    async showActiveCasesHeat(data) {
       const heatData = data.map((data) => [
         this.kelurahan[data.kelurahan][0], // lat
         this.kelurahan[data.kelurahan][1], // lng
-        this.getIntensity(data), // intensity
+        this.getActiveCaseIntensity(data), // intensity
       ]);
 
-      if (!this.heatLayer) {
-        this.heatLayer = Leaflet.heatLayer(heatData, {
+      if (!this.activeCasesHeatLayer) {
+        this.activeCasesHeatLayer = Leaflet.heatLayer(heatData, {
           radius: this.getRadius(),
           blur: this.getBlur(),
-          gradient: this.getGradient(),
+          gradient: this.getActiveCasesHeatGradient(),
         }).addTo(this.map);
 
         this.map.on("zoom", () => {
-          this.heatLayer.setOptions({
+          this.activeCasesHeatLayer.setOptions({
             radius: this.getRadius(),
             blur: this.getBlur(),
           });
         });
       } else {
-        this.heatLayer.setLatLngs(heatData);
+        this.activeCasesHeatLayer.setLatLngs(heatData);
+      }
+    },
+    async showNewCasesHeat(data) {
+      const heatData = data.map((data) => [
+        this.kelurahan[data.kelurahan][0], // lat
+        this.kelurahan[data.kelurahan][1], // lng
+        this.getNewCaseIntensity(data), // intensity
+      ]);
+
+      if (!this.newCasesHeatLayer) {
+        this.newCasesHeatLayer = Leaflet.heatLayer(heatData, {
+          radius: this.getRadius() * 0.6,
+          blur: this.getBlur() * 0.6,
+          gradient: this.getNewCasesHeatGradient(),
+        }).addTo(this.map);
+
+        this.map.on("zoom", () => {
+          this.newCasesHeatLayer.setOptions({
+            radius: this.getRadius() * 0.6,
+            blur: this.getBlur() * 0.6,
+          });
+        });
+      } else {
+        this.newCasesHeatLayer.setLatLngs(heatData);
       }
     },
     clearMarkers() {
@@ -919,7 +955,7 @@ export default {
         }`,
       ].join("<br/>");
     },
-    getIntensity(data) {
+    getActiveCaseIntensity(data) {
       switch (this.heatType) {
         case "POSITIF":
           return (
@@ -932,6 +968,16 @@ export default {
           return (data.pdp - data.pdpps) / this.highestPdp;
       }
     },
+    getNewCaseIntensity(data) {
+      switch (this.heatType) {
+        case "POSITIF":
+          return data.updates.positif / 15;
+        case "ODP":
+          return data.updates.odp / 30;
+        case "PDP":
+          return data.updates.pdp / 30;
+      }
+    },
     getRadius() {
       const zoom = this.map.getZoom();
       return zoom < 11 ? 10 : (zoom - 10) * 17 + 1;
@@ -940,7 +986,7 @@ export default {
       const zoom = this.map.getZoom();
       return zoom < 11 ? 10 : (zoom - 10) * 14 + 1;
     },
-    getGradient() {
+    getActiveCasesHeatGradient() {
       switch (this.heatType) {
         case "POSITIF":
           return {
@@ -966,6 +1012,14 @@ export default {
             1: "#8cf",
           };
       }
+    },
+    getNewCasesHeatGradient() {
+      return {
+        0.1: "#5f3fe1",
+        0.3: "#6500ff",
+        0.6: "#9700ff",
+        1: "#ff00e7",
+      };
     },
     getMinOpacity() {
       switch (this.heatType) {
